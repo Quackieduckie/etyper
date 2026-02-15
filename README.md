@@ -74,7 +74,7 @@ etyper includes a distraction-free typewriter application inspired by [ZeroWrite
 | Ctrl+S | Save document |
 | Ctrl+N | Save current and create new document |
 | Ctrl+R | Force full display refresh (cleans ghosting) |
-| Ctrl+Q | Save and quit |
+| Ctrl+Q | Save and restart (quit + auto-restart via systemd) |
 
 ### Status Bar
 

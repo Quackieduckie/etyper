@@ -422,7 +422,7 @@ class EtyperApp:
         if self.ctrl_held:
             if keycode == ecodes.KEY_Q:
                 self.save_document()
-                self.running = False
+                self._sleep_mode()
                 return
             elif keycode == ecodes.KEY_S:
                 self.save_document()
@@ -509,6 +509,65 @@ class EtyperApp:
             self.dirty = True
             self.needs_display_update = True
 
+    # --- Sleep / wake ---
+
+    def _sleep_mode(self):
+        """Save, show goodbye screen, put display to sleep, wait for Ctrl+Q to wake."""
+        print("Entering sleep mode...")
+
+        # Show goodbye screen
+        if self.epd:
+            try:
+                self.epd.init()
+                img = Image.new("1", (PORTRAIT_W, PORTRAIT_H), 255)
+                draw = ImageDraw.Draw(img)
+                draw.text((PORTRAIT_W // 2 - 70, PORTRAIT_H // 2 - 10),
+                          "Saved. Goodbye.", font=self.font, fill=0)
+                draw.text((PORTRAIT_W // 2 - 80, PORTRAIT_H // 2 + 20),
+                          "Ctrl+Q to resume", font=self.font, fill=0)
+                img_landscape = img.transpose(Image.Transpose.ROTATE_270)
+                self.epd.display(list(img_landscape.tobytes()))
+                self.epd.sleep()
+            except Exception:
+                pass
+
+        # Wait for Ctrl+Q on keyboard
+        print("Sleeping. Press Ctrl+Q to wake up...")
+        self._wait_for_wake()
+
+        # Wake up: reinitialize display and resume
+        print("Waking up...")
+        self.epd.init()
+        img = self.render()
+        self.epd.display(list(img.tobytes()))
+        self.epd.init_partial()
+        self.needs_display_update = False
+        print("Resumed.")
+
+    def _wait_for_wake(self):
+        """Block until Ctrl+Q is pressed again on the keyboard."""
+        ctrl_held = False
+        while self.running:
+            if self.keyboard is None:
+                self.keyboard = self._find_keyboard()
+                if self.keyboard is None:
+                    time.sleep(1)
+                    continue
+            try:
+                r, _, _ = select.select([self.keyboard.fd], [], [], 1.0)
+                if not r:
+                    continue
+                for event in self.keyboard.read():
+                    if event.type != ecodes.EV_KEY:
+                        continue
+                    if event.code in (ecodes.KEY_LEFTCTRL, ecodes.KEY_RIGHTCTRL):
+                        ctrl_held = event.value != 0
+                    elif event.code == ecodes.KEY_Q and event.value == 1 and ctrl_held:
+                        return
+            except OSError:
+                self.keyboard = None
+                time.sleep(1)
+
     # --- Main loop ---
 
     def run(self):
@@ -542,7 +601,7 @@ class EtyperApp:
         signal.signal(signal.SIGTERM, signal_handler)
 
         print("Ready! Start typing...")
-        print("  Arrows: move  |  Ctrl+S: save  |  Ctrl+N: new  |  Ctrl+R: refresh  |  Ctrl+Q: quit")
+        print("  Arrows: move  |  Ctrl+S: save  |  Ctrl+N: new  |  Ctrl+R: refresh  |  Ctrl+Q: sleep/wake")
 
         try:
             self._main_loop()
