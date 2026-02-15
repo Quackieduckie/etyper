@@ -1,0 +1,18 @@
+[Unit]
+Description=etyper - E-Paper Typewriter
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 __INSTALL_DIR__/typewriter.py
+WorkingDirectory=__INSTALL_DIR__
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+# Root required for GPIO and /dev/input access
+User=root
+
+[Install]
+WantedBy=multi-user.target

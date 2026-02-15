@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+env/
+*.egg-info/
+etyper_docs/
+*.swp
+*.swo
+*~

@@ -1,0 +1,4 @@
+spidev
+Pillow
+# These must be installed via apt (no pip packages):
+#   apt-get install python3-libgpiod python3-evdev
