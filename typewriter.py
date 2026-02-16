@@ -207,6 +207,36 @@ class EtyperApp:
         self.dirty = False
         self.needs_display_update = True
 
+    def _list_docs(self):
+        """Return sorted list of all .txt document paths in the docs directory."""
+        self._ensure_docs_dir()
+        docs = sorted(
+            f for f in os.listdir(DOCS_DIR)
+            if f.endswith(".txt") and f.startswith("doc_")
+        )
+        return [os.path.join(DOCS_DIR, f) for f in docs]
+
+    def _switch_document(self, direction):
+        """Switch to the next (+1) or previous (-1) document."""
+        self.save_document()
+        docs = self._list_docs()
+        if not docs:
+            return
+
+        try:
+            idx = docs.index(self.doc_path)
+        except ValueError:
+            idx = len(docs) - 1
+
+        new_idx = idx + direction
+        if new_idx < 0 or new_idx >= len(docs):
+            return  # already at first/last document
+
+        self.load_document(docs[new_idx])
+        self.needs_display_update = True
+        print(f"Switched to: {os.path.basename(self.doc_path)} "
+              f"({new_idx + 1}/{len(docs)})")
+
     # --- Text wrapping with cursor tracking ---
 
     def _wrap_with_cursor(self):
@@ -436,6 +466,12 @@ class EtyperApp:
                 img = self.render()
                 self.epd.full_refresh(list(img.tobytes()))
                 self.needs_display_update = False
+                return
+            elif keycode == ecodes.KEY_LEFT:
+                self._switch_document(-1)
+                return
+            elif keycode == ecodes.KEY_RIGHT:
+                self._switch_document(+1)
                 return
 
         # Arrow keys
