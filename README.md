@@ -4,6 +4,8 @@
 > It has been tested on real hardware but may contain bugs or suboptimal patterns.
 > Contributions and corrections are welcome.
 
+If you're looking for a functional rpi0 2W version please check this fork: https://github.com/T-KONES/rpi-etyper
+
 E-Paper display driver and distraction-free typewriter for the **WeAct Studio 4.2" E-Paper Module** (SSD1683, 400x300 B/W) on the **Orange Pi Zero 2W** (Allwinner H618, Armbian).
 
 ## Hardware
